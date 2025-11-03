@@ -36,4 +36,5 @@ export interface CompanyDetails {
   upiQrCode?: string;
   defaultNotes?: string;
   defaultTaxRate?: number;
+  password?: string;
 }

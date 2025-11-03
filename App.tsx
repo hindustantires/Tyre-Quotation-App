@@ -3,6 +3,7 @@ import { QuotationForm } from './components/QuotationForm.tsx';
 import { SavedQuotesList } from './components/SavedQuotesList.tsx';
 import { Header } from './components/Header.tsx';
 import { SettingsModal } from './components/SettingsModal.tsx';
+import { LoginScreen } from './components/LoginScreen.tsx';
 import type { Quotation, CompanyDetails } from './types.ts';
 
 type View = 'list' | 'form';
@@ -28,6 +29,8 @@ const App: React.FC = () => {
   const [selectedQuote, setSelectedQuote] = useState<Quotation | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [companyDetails, setCompanyDetails] = useState<CompanyDetails>(defaultCompanyDetails);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAppReady, setIsAppReady] = useState(false);
 
   useEffect(() => {
     try {
@@ -35,18 +38,35 @@ const App: React.FC = () => {
       if (savedQuotes) {
         setQuotes(JSON.parse(savedQuotes));
       }
+
       const savedDetails = localStorage.getItem('companyDetails');
+      let details: CompanyDetails;
       if (savedDetails) {
-        // Merge saved details with defaults to ensure new fields are present
-        const parsedDetails = JSON.parse(savedDetails);
-        setCompanyDetails({ ...defaultCompanyDetails, ...parsedDetails });
+        details = { ...defaultCompanyDetails, ...JSON.parse(savedDetails) };
       } else {
-        setCompanyDetails(defaultCompanyDetails);
+        details = defaultCompanyDetails;
+      }
+      setCompanyDetails(details);
+      
+      // Authentication logic
+      const passwordIsSet = !!details.password;
+      if (!passwordIsSet) {
+        setIsAuthenticated(true);
+      } else {
+        const sessionAuthenticated = sessionStorage.getItem('isAuthenticated') === 'true';
+        if (sessionAuthenticated) {
+          setIsAuthenticated(true);
+        } else {
+          setIsAuthenticated(false);
+        }
       }
     } catch (error) {
       console.error("Failed to load or parse data from localStorage", error);
       setQuotes([]);
       setCompanyDetails(defaultCompanyDetails);
+      setIsAuthenticated(true); // Fail open if there's an error
+    } finally {
+        setIsAppReady(true);
     }
   }, []);
 
@@ -61,11 +81,27 @@ const App: React.FC = () => {
   
   const handleSaveSettings = (details: CompanyDetails) => {
     try {
-      localStorage.setItem('companyDetails', JSON.stringify(details));
-      setCompanyDetails(details);
+      const detailsToSave = { ...details };
+      if (!detailsToSave.password) {
+        delete detailsToSave.password;
+      }
+      localStorage.setItem('companyDetails', JSON.stringify(detailsToSave));
+      setCompanyDetails(detailsToSave);
       setIsSettingsOpen(false);
     } catch (error) {
       console.error("Failed to save company details to localStorage", error);
+    }
+  };
+
+  const handleLoginSuccess = () => {
+    sessionStorage.setItem('isAuthenticated', 'true');
+    setIsAuthenticated(true);
+  };
+
+  const handleLogout = () => {
+    if (window.confirm('Are you sure you want to log out?')) {
+        sessionStorage.removeItem('isAuthenticated');
+        setIsAuthenticated(false);
     }
   };
 
@@ -108,6 +144,14 @@ const App: React.FC = () => {
       setView('list');
   }
 
+  if (!isAppReady) {
+    return <div className="bg-slate-50 min-h-screen" />; // Render nothing until auth state is determined
+  }
+
+  if (!isAuthenticated) {
+    return <LoginScreen storedPassword={companyDetails.password!} onLoginSuccess={handleLoginSuccess} />;
+  }
+
   return (
     <>
       <div className="bg-slate-50 min-h-screen text-slate-800">
@@ -116,6 +160,8 @@ const App: React.FC = () => {
           onCreateNew={handleCreateNew} 
           onViewList={handleViewList} 
           onOpenSettings={() => setIsSettingsOpen(true)}
+          isPasswordSet={!!companyDetails.password}
+          onLogout={handleLogout}
         />
         <main className="p-4 sm:p-6 md:p-8 max-w-7xl mx-auto">
           {view === 'list' && (
