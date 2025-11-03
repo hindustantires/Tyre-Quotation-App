@@ -5,9 +5,11 @@ interface HeaderProps {
     onCreateNew: () => void;
     onViewList: () => void;
     onOpenSettings: () => void;
+    isPasswordSet: boolean;
+    onLogout: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ currentView, onCreateNew, onViewList, onOpenSettings }) => {
+export const Header: React.FC<HeaderProps> = ({ currentView, onCreateNew, onViewList, onOpenSettings, isPasswordSet, onLogout }) => {
   return (
     <header className="bg-white shadow-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-4 flex justify-between items-center">
@@ -17,7 +19,7 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onCreateNew, onView
             </svg>
             <h1 className="text-2xl font-bold text-slate-800">Tyre Quotation Pro</h1>
         </div>
-        <nav className="flex items-center space-x-4">
+        <nav className="flex items-center space-x-2 sm:space-x-4">
             {currentView === 'form' ? (
                  <button
                     onClick={onViewList}
@@ -37,6 +39,18 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onCreateNew, onView
                         <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
                     </svg>
                     Create New Quote
+                </button>
+            )}
+            {isPasswordSet && (
+                <button
+                    onClick={onLogout}
+                    className="p-2 rounded-full text-slate-600 hover:bg-slate-200 hover:text-slate-800 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500"
+                    aria-label="Logout"
+                    title="Logout"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
                 </button>
             )}
              <button

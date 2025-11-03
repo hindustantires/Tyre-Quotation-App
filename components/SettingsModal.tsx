@@ -95,6 +95,22 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ details, onSave, o
                     </FormField>
                 </div>
             </div>
+            
+            <div className="bg-white p-6 rounded-lg shadow">
+                <h3 className="text-lg font-semibold mb-4 border-b pb-2 text-slate-700">Security</h3>
+                <div className="grid grid-cols-1">
+                    <FormField label="App Password" fullWidth={true}>
+                        <Input 
+                            type="password" 
+                            name="password" 
+                            value={currentDetails.password || ''} 
+                            onChange={handleChange} 
+                            placeholder="Leave blank for no password"
+                        />
+                        <p className="text-xs text-slate-500 mt-1">Set a password to protect access to the application. You will be asked for it when you start a new session.</p>
+                    </FormField>
+                </div>
+            </div>
 
             <div className="bg-white p-6 rounded-lg shadow">
                 <h3 className="text-lg font-semibold mb-4 border-b pb-2 text-slate-700">Payment Details</h3>
