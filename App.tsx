@@ -144,6 +144,54 @@ const App: React.FC = () => {
       setView('list');
   }
 
+  const handleBackup = () => {
+    const backupData = {
+      version: '1.0',
+      timestamp: new Date().toISOString(),
+      companyDetails,
+      quotes
+    };
+    
+    const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `tyre_quotation_backup_${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleRestore = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const content = e.target?.result as string;
+        const data = JSON.parse(content);
+        
+        if (!data.quotes || !Array.isArray(data.quotes)) {
+            throw new Error('Invalid backup file: Missing quotations data.');
+        }
+        
+        if (window.confirm(`Are you sure you want to restore data from ${new Date(data.timestamp).toLocaleDateString()}? This will overwrite all current quotations and settings.`)) {
+            setQuotes(data.quotes);
+            if (data.companyDetails) {
+                setCompanyDetails(data.companyDetails);
+                localStorage.setItem('companyDetails', JSON.stringify(data.companyDetails));
+            }
+            localStorage.setItem('tyreQuotes', JSON.stringify(data.quotes));
+            alert('Data restored successfully.');
+            setIsSettingsOpen(false);
+        }
+      } catch (err) {
+        console.error('Restore failed:', err);
+        alert('Failed to restore data. The file appears to be invalid.');
+      }
+    };
+    reader.readAsText(file);
+  };
+
   if (!isAppReady) {
     return <div className="bg-slate-50 min-h-screen" />; // Render nothing until auth state is determined
   }
@@ -188,6 +236,8 @@ const App: React.FC = () => {
           details={companyDetails}
           onSave={handleSaveSettings}
           onClose={() => setIsSettingsOpen(false)}
+          onBackup={handleBackup}
+          onRestore={handleRestore}
         />
       )}
     </>
