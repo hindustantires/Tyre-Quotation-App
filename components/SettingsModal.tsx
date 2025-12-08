@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import type { CompanyDetails } from '../types.ts';
 
 interface SettingsModalProps {
   details: CompanyDetails;
   onSave: (details: CompanyDetails) => void;
   onClose: () => void;
+  onBackup: () => void;
+  onRestore: (file: File) => void;
 }
 
 const FormField: React.FC<{label: string, children: React.ReactNode, fullWidth?: boolean}> = ({ label, children, fullWidth }) => (
@@ -18,8 +20,9 @@ const Input = (props: React.InputHTMLAttributes<HTMLInputElement>) => (
     <input {...props} className={`w-full px-3 py-2 border bg-white text-slate-900 border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition ${props.className}`} />
 );
 
-export const SettingsModal: React.FC<SettingsModalProps> = ({ details, onSave, onClose }) => {
+export const SettingsModal: React.FC<SettingsModalProps> = ({ details, onSave, onClose, onBackup, onRestore }) => {
   const [currentDetails, setCurrentDetails] = useState<CompanyDetails>(details);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -158,6 +161,46 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ details, onSave, o
                 </div>
             </div>
 
+            <div className="bg-white p-6 rounded-lg shadow">
+                <h3 className="text-lg font-semibold mb-4 border-b pb-2 text-slate-700">Data Management</h3>
+                <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
+                    <button
+                        type="button"
+                        onClick={onBackup}
+                        className="flex items-center justify-center px-4 py-2 border border-slate-300 rounded-md text-slate-700 hover:bg-slate-100 transition"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                        Backup Data
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="flex items-center justify-center px-4 py-2 border border-slate-300 rounded-md text-slate-700 hover:bg-slate-100 transition"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0l-4 4m4-4v12" />
+                        </svg>
+                        Restore Data
+                    </button>
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        className="hidden"
+                        accept=".json"
+                        onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                                onRestore(file);
+                                e.target.value = '';
+                            }
+                        }}
+                    />
+                </div>
+                <p className="text-xs text-slate-500 mt-2">Download a backup of all quotations and settings, or restore from a previously saved file.</p>
+            </div>
+            
           </div>
         </form>
         <div className="p-5 border-t bg-slate-100 rounded-b-lg flex justify-end items-center space-x-4">
